@@ -1,4 +1,3 @@
-import couch_server
 import couchdb
 import datetime
 from uuid import uuid4
@@ -7,11 +6,27 @@ from nltk import tokenize
 import reference_dict
 
 
+def get_sports_db_list(secure_server):
+    sports_db_dict = {}
+    couch_dict = reference_dict.couch_dict
+    for sport_db in couch_dict.keys():
+        try:
+            sports_db_dict[sport_db] = secure_server[couch_dict[sport_db]]
+        except Exception:
+            sports_db_dict[sport_db] = secure_server.create(couch_dict[sport_db])
+    return sports_db_dict
+
+
 def connect_couchDB_server():
-    database_server = couch_server.db_server('admin1', 'password')
-    secure_server = database_server.secure_server
-    origin_db = database_server.db
-    sports_db_dict = database_server.sports_db_dict
+
+    # database_server = couch_server.db_server('admin1', 'password')
+    # secure_server = database_server.secure_server
+    # origin_db = database_server.db
+    # sports_db_dict = database_server.sports_db_dict
+
+    secure_server = couchdb.Server('http://localhost:9000/')
+    origin_db = secure_server["viewdatabase"]
+    sports_db_dict = get_sports_db_list(secure_server)
     return secure_server, origin_db, sports_db_dict
 
 
@@ -35,31 +50,30 @@ def get_sentiment_type(doc):
 
 
 def view_to_db(dictionary, couch_view):
-
     sport_dict = reference_dict.sports_dict
     for each_tweet in couch_view:
         for sport in sport_dict.keys():
             if sport in each_tweet["value"]:
                 try:
-                    doc = each_tweet["value"][sport]
-                    sentiment_type = get_sentiment_type(doc)
+                    sport_doc = each_tweet["value"][sport]
+                    sentiment_type = get_sentiment_type(sport_doc)
                     clean_doc = {
-                        "id": doc["id"], "text": doc["text"], "coordinates": doc["coordinates"],
-                        "user": {"user_id": doc["user"]["id"], "user_id_str": doc["user"]["id_str"],
-                                 "user_name": doc["user"]["name"], "user_lang": doc["user"]["lang"],
-                                 "user_time_zone": doc["user"]["time_zone"],
-                                 "user_description": doc["user"]["description"]},
-                        "place": doc["place"],
+                        "id": sport_doc["id"], "text": sport_doc["text"], "coordinates": sport_doc["coordinates"],
+                        "user": {"user_id": sport_doc["user"]["id"], "user_id_str": sport_doc["user"]["id_str"],
+                                 "user_name": sport_doc["user"]["name"], "user_lang": sport_doc["user"]["lang"],
+                                 "user_time_zone": sport_doc["user"]["time_zone"],
+                                 "user_description": sport_doc["user"]["description"]},
+                        "place": sport_doc["place"],
                         "sportType": sport,
                         "sentimentType": sentiment_type
                     }
-                    doc["_id"] = uuid4().hex
+                    sport_doc["_id"] = uuid4().hex
                     dictionary[sport_dict[sport]].save(clean_doc)
                 except couchdb.http.ResourceConflict as e:
                     with open('database_log', 'a') as f:
                         f.write("[" + datetime.datetime.now().__str__() + "]" + '\n')
                         f.write(str(e) + '\n')
-                        f.write((doc['_id'] + '\n'))
+                        f.write((sport_doc['_id'] + '\n'))
 
 
 if __name__ == '__main__':

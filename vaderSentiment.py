@@ -3,40 +3,8 @@ import math, re, string, requests, json
 from itertools import product
 from inspect import getsourcefile
 from os.path import abspath, join, dirname
-import json
-import re
 
 ##Constants##
-pos =0
-neg =0
-
-indoor = re.compile(r"\bfitness\b | \bgym\b | \bdance\b | \byoga\b | \bspinning\b", flags=re.I | re.X)
-run = re.compile(r"\brun\b | \brunning\b | \bmarathon\b", flags=re.I | re.X)
-rugby = re.compile(r"\brugby\b", flags=re.I | re.X)
-football = re.compile(r"\bfootball\b | \bfooty\b | \bAFL\b | \bAustralian Football League\b "
-                   r"| \bARF\b | \bAustralian Rules Football\b | \bAussie Rules or Footy\bbNRL\b "
-                   r"| \bNational Rugby League\b", flags=re.I | re.X)
-soccer = re.compile(r"\bsoccer\b", flags=re.I | re.X)
-basketball = re.compile(r"\bbasketball\b", flags=re.I | re.X)
-tennis = re.compile(r"\btennis\b", flags=re.I | re.X)
-swim = re.compile(r"\bswim\b | \bswimming\b", flags=re.I | re.X)
-cycle = re.compile(r"\bcycle\b | \bcycling\b", flags=re.I | re.X)
-cricket = re.compile(r"\bcricket\b", flags=re.I | re.X)
-
-# sports_class = ["indoor_tweets", "run_tweets", "rugby_tweets", "football_tweets", "soccer_tweets",
-#                "basketball_tweets", "tennis_tweets", "tennis_tweets", "cycle_tweets", "cricket_tweets"]
-# get coordinate information from tweets and save into a list
-
-indoor_tweets = []
-run_tweets = []
-rugby_tweets = []
-football_tweets = []
-soccer_tweets = []
-basketball_tweets = []
-tennis_tweets = []
-swim_tweets = []
-cycle_tweets = []
-cricket_tweets = []
 
 # (empirically derived mean sentiment intensity rating increase for booster words)
 B_INCR = 0.293
@@ -93,10 +61,6 @@ SPECIAL_CASE_IDIOMS = {"the shit": 3, "the bomb": 3, "bad ass": 1.5, "yeah right
 
 ##Static methods##
 
-
-
-
-
 def negated(input_words, include_nt=True):
     """
     Determine if input contains negation words
@@ -115,6 +79,7 @@ def negated(input_words, include_nt=True):
         if i > 0 and input_words[i-1] != "at":
             return True
     return False
+
 
 def loadbyline(fp):
     tlist = []
@@ -491,133 +456,29 @@ class SentimentIntensityAnalyzer(object):
 
         return sentiment_dict
 
-def read_file(file_name):
-    # open file from the current directory
-    fileobject = open(file_name, 'r', encoding='utf-8')
-    return fileobject
 
 
-def getsentiment(text):
-    paragraphSentiments = 0.0
-    for sentence in text:
-        vs = analyzer.polarity_scores(sentence)
-        paragraphSentiments += vs["compound"]
-
-    text_score = round(paragraphSentiments / len(text), 4)
-    print(text_score)
-    return text_score
 
 
-def get_clean_tweet(data, sports_class):
-    tweet_id = data["meta"]["id"]
-    text = data["json"]["text"]
-
-    coordinates = data["json"]["coordinates"]["coordinates"]
-    user_id = data["json"]["user"]["id"]
-    user_id_str = data["json"]["user"]["id_str"]
-    user_name = data["json"]["user"]["name"]
-    user_lang = data["json"]["user"]["lang"]
-    user_time_zone = data["json"]["user"]["time_zone"]
-    user_description = data["json"]["user"]["description"]
-    place = data["json"]["place"]
-    sentiment = getsentiment(text)
-
-    clean_tweet = {
-        "sports": sports_class,
-        "id": tweet_id, "text": text, "coordinates": coordinates,
-        "user": {"user_id": user_id, "user_id_str": user_id_str,
-                 "user_name": user_name, "user_lang": user_lang,
-                 "user_time_zone": user_time_zone, "user_description": user_description},
-        "place": place
-    }
-    return clean_tweet
 
 
-def get_tweet_info(twitter_file):
-
-    while 1:
-        line = twitter_file.readline()
-        if line:
-            if line.startswith("{"):
-                file_data = line.strip().strip(",")
-                data_json = json.loads(file_data)
-                text = data_json["json"]["text"]
-                description = data_json["json"]["user"]["description"]
-
-                if re.search(indoor, text) or re.search(indoor, description):
-                    clean_tweet = get_clean_tweet(data_json, "indoor")
-                    indoor_tweets.append(clean_tweet)
-                elif re.search(run, text) or re.search(run, description):
-                    clean_tweet = get_clean_tweet(data_json, "run")
-                    run_tweets.append(clean_tweet)
-                elif re.search(rugby, text) or re.search(rugby, description):
-                    clean_tweet = get_clean_tweet(data_json, "rugby")
-                    rugby_tweets.append(clean_tweet)
-                elif re.search(football, text) or re.search(football, description):
-                    clean_tweet = get_clean_tweet(data_json, "football")
-                    football_tweets.append(clean_tweet)
-                elif re.search(soccer, text) or re.search(soccer, description):
-                    clean_tweet = get_clean_tweet(data_json, "soccer")
-                    soccer_tweets.append(clean_tweet)
-                elif re.search(basketball, text) or re.search(basketball, description):
-                    clean_tweet = get_clean_tweet(data_json, "basketball")
-                    basketball_tweets.append(clean_tweet)
-                elif re.search(tennis, text) or re.search(tennis, description):
-                    clean_tweet = get_clean_tweet(data_json, "tennis")
-                    tennis_tweets.append(clean_tweet)
-                elif re.search(swim, text) or re.search(swim, description):
-                    clean_tweet = get_clean_tweet(data_json, "swim")
-                    swim_tweets.append(clean_tweet)
-                elif re.search(cycle, text) or re.search(cycle, description):
-                    clean_tweet = get_clean_tweet(data_json, "cycle")
-                    cycle_tweets.append(clean_tweet)
-                elif re.search(cricket, text) or re.search(cricket, description):
-                    clean_tweet = get_clean_tweet(data_json, "cricket")
-                    cricket_tweets.append(clean_tweet)
-        else:
-            break
 
 
-def write_tweet_info():
-    with open("indoorTwitter.json", "w") as Twitter_Output_File:
-        print("indoor count : ", len(indoor_tweets))
-        json.dump(indoor_tweets, Twitter_Output_File, indent=0)
-    with open("runTwitter.json", "w") as Twitter_Output_File:
-        print("run count : ", len(run_tweets))
-        json.dump(run_tweets, Twitter_Output_File, indent=4)
-    with open("rugbyTwitter.json", "w") as Twitter_Output_File:
-        print("rugby count : ", len(rugby_tweets))
-        json.dump(rugby_tweets, Twitter_Output_File, indent=4)
-    with open("footballTwitter.json", "w") as Twitter_Output_File:
-        print("football count : ", len(football_tweets))
-        json.dump(football_tweets, Twitter_Output_File, indent=4)
-    with open("soccerTwitter.json", "w") as Twitter_Output_File:
-        print("soccer count : ", len(soccer_tweets))
-        json.dump(soccer_tweets, Twitter_Output_File, indent=4)
-    with open("basketballTwitter.json", "w") as Twitter_Output_File:
-        print("basketball count : ", len(basketball_tweets))
-        json.dump(basketball_tweets, Twitter_Output_File, indent=4)
-    with open("tennisTwitter.json", "w") as Twitter_Output_File:
-        print("tennis count : ", len(tennis_tweets))
-        json.dump(tennis_tweets, Twitter_Output_File, indent=4)
-    with open("swimTwitter.json", "w") as Twitter_Output_File:
-        print("swim count : ", len(swim_tweets))
-        json.dump(swim_tweets, Twitter_Output_File, indent=4)
-    with open("cycleTwitter.json", "w") as Twitter_Output_File:
-        print("cycle count : ", len(cycle_tweets))
-        json.dump(cycle_tweets, Twitter_Output_File, indent=4)
-    with open("cricketTwitter.json", "w") as Twitter_Output_File:
-        print("cricket count : ", len(cricket_tweets))
-        json.dump(cricket_tweets, Twitter_Output_File, indent=4)
 
-if __name__ == '__main__':
 
-    analyzer = SentimentIntensityAnalyzer()
 
-    Twitter_Input_File = read_file("smallTwitter.json")
-    # read tweets file
-    get_tweet_info(Twitter_Input_File)
-    # writ tweets file
-    write_tweet_info()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
