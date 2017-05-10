@@ -9,7 +9,7 @@ Tweets crawler refers to ZelongCong's GitHub:
 (Data are saved in couchdb)
 ### Views established first on the CouchDB server through [Fauxton]
 Since the paucity of information on how to write couchdb views with python is obvious. Aftering trying our best to create a view with python, it is showed that creating a view with Fauxton could be much easier.
-Details would be illustrated in [How to run](## Hoe to run) part
+Details would be illustrated in [How to run](## How to run) part
 ### Connect to the secure CouchDB server and get the wanted database:
 After establishig a CouchDB cluster, three things should be get:
  - Server IP Adress (130.220.212.108)
@@ -18,7 +18,7 @@ After establishig a CouchDB cluster, three things should be get:
 We establish a python server class to make the more secure access to the couchdb server (`"couch_server.py"`):
 
 
-## Hoe to run
+## How to run
 The repo can be run from two kinds of files: `"start_remote.py"` and `"start.py"` are used to connect CouchDB server,and `calculate_city.py` is used to calculate final information.
 ### Step1: Create a view
 This view is used to classify the raw tweets data in next step. It is created manually in fauxton.
