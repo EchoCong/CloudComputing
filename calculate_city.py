@@ -16,7 +16,7 @@ def get_sports_db_list(secure_server):
 
 def connect_couchDB_server():
 
-    secure_server = couchdb.Server('http://localhost:9000/')
+    secure_server = couchdb.Server('http://admin1:password@localhost:9000/')
     origin_db = secure_server["viewdatabase"]
     sports_db_dict = get_sports_db_list(secure_server)
     return secure_server, origin_db, sports_db_dict
@@ -46,11 +46,33 @@ def calculate_city():
             city_info = {"count": count, "sentiment": {"neg": neg_count, "pos": pos_count}}
             sport_info[city] = city_info
         final_list[sports_dict_rv[db]] = sport_info
-    with open("final_list.json", "w") as Twitter_Output_File:
-        json.dump(final_list, Twitter_Output_File, indent=2)
+    with open("final_sport_list.json", "w") as Twitter_Output_File:
+        json.dump(final_list, Twitter_Output_File, indent=4)
+    return final_list
+
+
+def output_final_city_list(final_sport_list):
+    final_city_list = []
+    city_list = reference_dict.citylist
+    coordinate_dict = reference_dict.coordinate_dict
+    for city in city_list:
+        city_info = {}
+        city_info["id"] = city
+        city_info["coordinates"] = coordinate_dict[city]
+        total = 0
+        positive =0
+        for sport in final_sport_list:
+            total = total + sport[city]["count"]
+            positive = positive + sport[city]["sentiment"]["pos"]
+        city_info["total"] = total
+        city_info["positive"] = positive
+        final_city_list.append(city_info)
+    with open("final_city_list.json", "w") as Twitter_Output_File:
+        json.dump(final_city_list, Twitter_Output_File, indent=4)
 
 
 if __name__ == '__main__':
 
     couch_server, raw_tweets_db, sports_dbs = connect_couchDB_server()
-    calculate_city()
+    final_sport_list = calculate_city()
+    output_final_city_list(final_sport_list)

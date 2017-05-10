@@ -24,8 +24,8 @@ def connect_couchDB_server():
     # origin_db = database_server.db
     # sports_db_dict = database_server.sports_db_dict
 
-    secure_server = couchdb.Server('http://localhost:9000/')
-    origin_db = secure_server["viewdatabase"]
+    secure_server = couchdb.Server('http://admin1:password@localhost:9000/')
+    origin_db = secure_server["new_tweet"]
     sports_db_dict = get_sports_db_list(secure_server)
     return secure_server, origin_db, sports_db_dict
 
@@ -73,11 +73,10 @@ def view_to_db(dictionary, couch_view):
                     with open('database_log', 'a') as f:
                         f.write("[" + datetime.datetime.now().__str__() + "]" + '\n')
                         f.write(str(e) + '\n')
-                        f.write((sport_doc['_id'] + '\n'))
 
 
 if __name__ == '__main__':
 
     couch_server, raw_tweets_db, sports_dbs = connect_couchDB_server()
-    all_sports_view = raw_tweets_db.view('novel_view/all_sports_view', reduce=False)
+    all_sports_view = raw_tweets_db.view('view/new_view', reduce=False)
     view_to_db(sports_dbs, all_sports_view)
